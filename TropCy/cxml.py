@@ -1,6 +1,4 @@
 import xml.etree.ElementTree as ET
-import sys
-import os
 from datetime import datetime
 # pylint: disable=W0311, C0326, C0103, C0301
 
