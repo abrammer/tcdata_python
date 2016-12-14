@@ -61,7 +61,7 @@ def cxml2atcf(fname):
 #  run the main code if called as a script
 if __name__ == "__main__":
    try:
-    # fname='/Users/abrammer/Desktop/tigge_cxml/cxml/z_tigge_c_ecmf_20061003120000_ifs_glob_prod_all_glo.xml'
+    # fname='test_data/z_tigge_c_ecmf_20140905120000_ifs_glob_prod_all_glo.xml'
     fname=sys.argv[1]
     print (fname)
     cxml2atcf(fname)
