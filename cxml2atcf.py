@@ -13,6 +13,9 @@ def save_atcf(basin, number, time, data, fid):
 
 def cxml2atcf(fname):
   """Read all forecasts for non errored storms and save to appropriate adeck file"""
+  if not os.path.isfile(fname):
+      print("No file found -- "+fname)
+      return
   tree = ET.parse(fname)
   xml_root = tree.getroot()
   ##  Get analysis info from xml.  Defines the storms that exist
