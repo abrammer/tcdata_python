@@ -86,18 +86,21 @@ def filename(basin, storm, date):
 #   cw = csv.writer(fw, delimiter=',')
 #   cw.writerows(datum)
 
-def read_adeck(fname):
+def read_adeck(fname, tech=None):
   """Read adeck from filename into pandas dataframe"""
   ## Tried versions of parsing colums in the read_csv func and they were much slower
-  atcfNames = ["basin","number","datetime","tnum","tech","tau","lat","lon","vmax","mslp","TY"]
-  datum = pd.read_csv(fname, sep=',', names=atcfNames)
+  atcfNames = ["basin","number","datetime","tnum","tech","tau","lat","lon","vmax","mslp","type"]
+  datum = pd.read_csv(fname, sep=',', names=atcfNames, engine='python', index_col=False,usecols=range(len(atcfNames)) )
   datum['lat'] = str2ll(datum['lat'])
   datum['lon'] = str2ll(datum['lon'])
   datum['tech'] = datum['tech'].str.strip()
-  datum['datetime'] = pd.to_datetime(datum['datetime'], format="%Y%m%d%H%M")
-  return datum
-
-
+  datum['datetime'] = pd.to_datetime(datum['datetime'], format="%Y%m%d%H")
+  datum['validtime'] =  datum['datetime']  + pd.to_timedelta(datum['tau'], unit="h")
+  if tech is None:
+    return datum
+  else:
+    return datum.loc[ datum['tech'].isin(tech) ]
+    
 if __name__ == '__main__':
   fname = "~/Desktop/tigge_cxml/adeck/aal022011.dat"
   data = read_adeck(fname)
