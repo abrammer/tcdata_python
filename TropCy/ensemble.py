@@ -1,55 +1,56 @@
 import numpy as np
-import atcf
+import pandas as pd
 
-def calculate_ellipse(data)
-    date_array = data['datetime'].unique()
-    for date in date_array:
-      tau_array = data[ data['datetime']==date ]['tau'].unique()
-      for tau in tau_array:
-        sub_data = data[ (data['datetime']==date) & (data['tau'] == tau) ]
-        mean_locs = data.groupby(['datetime','tau'])['lat','lon'] - data.groupby(['datetime','tau'])['lat','lon'].mean()        
-        Pb = []
-        Pb[0] = sum( (sub_data['lon'] - mean_lons)**2)
-        Pb[1] = sum( (sub_data['lat'] - mean_lats)**2)
-        Pb[2] = sum( (sub_data['lat'] - mean_lats) * (sub_data['lon'] - mean_lons) )
+def calculate_ellipse(group, min_no=0):
+    if(len(group) < min_no):
+        return
+    sigm_locs = group[ ['lat', 'lon'] ].std()**2
+    if( any( sigm_locs <=  0.01 )):
+        return
+    rho = group['lat'].cov( group['lon'] )
+    try:
+        eig_val, eig_vec = np.linalg.eig( [ [sigm_locs['lat'], rho],[rho, sigm_locs['lon']]] )
+        eig_val = np.sqrt( abs(eig_val) )
+        srt = np.argsort(eig_val)[::-1]
+        angls = 180-np.degrees( np.arctan2( eig_vec[srt,0], eig_vec[srt,1]))
+        retval = pd.Series( { 'ell_major' : eig_val[srt[0]] ,    \
+                              'ell_minor' : eig_val[srt[1]],  \
+                              'ell_angle' : angls[0]          })
+        return retval
+    except Exception as e:
+        print( mean_locs, sigm_locs, rho )
+        print("======")
+        return 
 
-
-for name, group in data.groupby(['datetime','tau']):
-  mean_locs = group[ ['lat', 'lon'] ].mean()
-  anom_locs = group[ ['lat', 'lon'] ] - mean_locs
-  Pb = []
-  Pb.append(  sum( anom_locs['lon']**2 )  )
-  Pb.append(  sum( anom_locs['lat']**2 )  )
-  Pb.append(  sum( anom_locs['lon'] * anom_locs['lat'] )  )
-  print( Pb[0] == 0 or Pb[1] == 0)
-  Pb[:] = [x / len(anom_locs) for x in Pb]
-  rho = Pb[2] / np.sqrt( Pb[1]) *  np.sqrt(Pb[0])   
-  
-# Pb= new( (/2,2/), float)
-# Pb(:,:) = 0.0
-# 
-# Pb(0,0) = dim_sum( (x(:)-mx) * (x(:)-mx) )  ; Pb[0]
-# Pb(1,1) = dim_sum( (y(:)-my) * (y(:)-my) )  ; Pb[1]
-# Pb(1,0) = dim_sum( (y(:)-my) * (x(:)-mx) )  ; Pb[2]
-
-Pb(0,1) = Pb(1,0)
-
-if( Pb(0,0) .eq.0 .or. Pb(1,1) .eq. 0)
-  continue
-end if
-Pb(:,:) = Pb(:,:) / int2flt(num(.not.ismissing(y))-1)
-rho     = Pb(1,0) / (sqrt(Pb(0,0)) * sqrt(Pb(1,1)))
-sigmax  = sqrt(Pb(0,0))
-sigmay  = sqrt(Pb(1,1))
-fac     = 1.0 / (2.0 * (1 - rho * rho))
+def haversine_distance_angle( lat1, lon1, lat2, lon2):
+    R = 6371. # Earths Circumferences  [km]
+    rlat1 = np.radians( lat1 )
+    rlon1 = np.radians( lon1 )
+    rlat2 = np.radians( lat2 )
+    rlon2 = np.radians( lon2 )
+    d = np.arccos( np.sin(rlat1)*np.sin(rlat2) + np.cos(rlat1)*np.cos(rlat2)*np.cos(rlon2-rlon1) ) * R
+#     dy= np.arccos( np.sin(rlat1)*np.sin(rlat2) + np.cos(rlat1)*np.cos(rlat2) ) * R
+#     dx= np.arccos( np.sin(rlat2)*np.sin(rlat2) + np.cos(rlat2)*np.cos(rlat2)*np.cos(rlon2-rlon1) ) * R
+    brng = np.degrees( np.arctan2(np.cos(rlat1)*np.sin(rlat2)- \
+                      np.sin(rlat1)*np.cos(rlat2)*np.cos(rlon2-rlon1), \
+                                np.sin(rlon2-rlon1)*np.cos(rlat2)) )
+    return d, brng
 
 
+def absolute_track_spread(data):
+    d, brng = haversine_distance_angle(  data['lat'],  data['lon'],  data['lat'].mean(), data['lon'].mean()  )
+    data['ats_dist'] = d
+    data['ats_angl'] = brng
+    return data
 
 
 
+# def along_across_error(data):
+#     lat2 = np.radians( data['lat'].mean() )
+#     lon2 = np.radians( data['lon'].mean() )
+#     d, brng = [ haversine_distance_angle()]
+#     data['ats'] = d
+#     return data
 
 
 
-if __name__ == '__main__':
-  fname ="~/data/nhc_tracks/aid/aal042015.dat.gz"
-  data = atcf.read_adeck(fname)
