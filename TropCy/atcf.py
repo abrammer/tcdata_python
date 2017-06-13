@@ -3,14 +3,17 @@
 # pylint: disable=W0311, C0326, C0103
 import pandas as pd
 
+def strip(text):
+    try:
+        return text.strip()
+    except AttributeError:
+        return text
+
 def str2ll(x):
-  """Convert atcf str to latlon"""
-  xstr = x.str.strip()
-  converters = {'N':1,'S':-1,'W':-1,'E':1}
-  units = [ converters[ustr] for ustr in xstr.str[-1]]
-  numerics = pd.to_numeric(xstr.str[:-1]) /10.
-  numerics = numerics*units
-  return numerics
+    """Convert atcf str to latlon -- internal single value only"""
+    converters = {'N':1,'S':-1,'W':-1,'E':1}
+    ret = (int(x[:-1])*converters[x[-1]]) / 10
+    return ret
 
 def lat(x):
   """Convert numeric lat to atcf lat string"""
@@ -56,6 +59,9 @@ def basin2long(shortname):
     except KeyError:
       return shortname
 
+def to_datetime(date):
+    date = strip(date)
+    return pd.to_datetime(date, format="%Y%m%d%H")
 
 def line_out( basin, cyNo, rdate, tech, tau, inlat, inlon, vmax, mslp, TY='XX' ):
     """Format data int atcf string style"""
@@ -86,20 +92,37 @@ def filename(basin, storm, date):
 #   cw = csv.writer(fw, delimiter=',')
 #   cw.writerows(datum)
 
+def read_storm_names(fname):
+  """Read storm names master list into pandas dataframe"""
+  atcfNames = ["name","basin","basin_code","bc2","bc3","bc4","bc5","number","year","type","trackshape",
+  "startdate", "enddate","size","gen_num", "par1","par2","priority","state", "wt_numer","id"]
+  datum = pd.read_csv(fname, sep=' *, *', names=atcfNames, engine='python', index_col=False,usecols=range(len(atcfNames)) )
+  return datum[ ['name', 'basin', 'number','year', 'type', 'startdate', 'enddate','id'] ]
+  
+
 def read_adeck(fname, tech=None):
   """Read adeck from filename into pandas dataframe"""
   ## Tried versions of parsing colums in the read_csv func and they were much slower
-  atcfNames = ["basin","number","datetime","tnum","tech","tau","lat","lon","vmax","mslp","type"]
-  datum = pd.read_csv(fname, sep=',', names=atcfNames, engine='python', index_col=False,usecols=range(len(atcfNames)) )
-  datum['lat'] = str2ll(datum['lat'])
-  datum['lon'] = str2ll(datum['lon'])
-  datum['tech'] = datum['tech'].str.strip()
-  datum['datetime'] = pd.to_datetime(datum['datetime'], format="%Y%m%d%H")
+  atcfNames = ["basin","number","datetime","tnum","tech","tau","lat","lon","vmax","mslp","type","rad","windcode","rad1",
+            "rad2","rad3","rad4","pouter","router","rmw","gusts","eye","subregion"]
+  converters = { 'basin' : strip,
+                 'number' : strip,
+                 'datetime': to_datetime,
+                 'tech' : strip,
+                 'lat' : str2ll,
+                 'lon' : str2ll,
+                 'subregion': strip}
+                           
+  datum = pd.read_csv(fname, sep=r',',engine='python', index_col=False,usecols=range(len(atcfNames)),
+             names=atcfNames,
+             converters=converters )
   datum['validtime'] =  datum['datetime']  + pd.to_timedelta(datum['tau'], unit="h")
   if tech is None:
     return datum
   else:
     return datum.loc[ datum['tech'].isin(tech) ]
+    
+
     
 if __name__ == '__main__':
   fname = "~/Desktop/tigge_cxml/adeck/aal022011.dat"
