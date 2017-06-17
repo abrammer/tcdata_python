@@ -1,4 +1,4 @@
-"""Simple functions to currently aid in writing ATCF format files"""
+"""Simple functions to currently aid in reading/writing ATCF format files"""
 #ATCF read / Write Module
 # pylint: disable=W0311, C0326, C0103
 import pandas as pd
@@ -59,12 +59,10 @@ def basin2long(shortname):
     except KeyError:
       return shortname
 
-def to_datetime(date):
-    date = strip(date)
-    return pd.to_datetime(date, format="%Y%m%d%H")
 
 def line_out( basin, cyNo, rdate, tech, tau, inlat, inlon, vmax, mslp, TY='XX' ):
-    """Format data int atcf string style"""
+    """Format data int atcf string style
+    TODO: update this to fstring so it's more readable"""
     basin = basin2short(basin)
     outline = ("{basin}, {cyNo:02}, "
                "{time.year:04.0f}{time.month:02.0f}{time.day:02.0f}{time.hour:02.0f}, "
@@ -105,18 +103,19 @@ def read_adeck(fname, tech=None):
   ## Tried versions of parsing colums in the read_csv func and they were much slower
   atcfNames = ["basin","number","datetime","tnum","tech","tau","lat","lon","vmax","mslp","type","rad","windcode","rad1",
             "rad2","rad3","rad4","pouter","router","rmw","gusts","eye","subregion"]
-  converters = { 'basin' : strip,
-                 'number' : strip,
-                 'datetime': to_datetime,
-                 'tech' : strip,
-                 'lat' : str2ll,
-                 'lon' : str2ll,
-                 'subregion': strip}
-                           
-  datum = pd.read_csv(fname, sep=r',',engine='python', index_col=False,usecols=range(len(atcfNames)),
-             names=atcfNames,
-             converters=converters )
+  converters = {   'lat' : str2ll,
+                   'lon' : str2ll}
+  # n.b. ' *, *' takes care of stripping whitespace
+  #  python engine allows for providing too many column names
+  #  datetime as converter is super slow, str2ll is neglible time addition
+  datum = pd.read_csv(fname, sep=' *, *',engine='python', index_col=False,
+     usecols=range(len(atcfNames)),
+     names=atcfNames,
+     converters=converters )
+  #  Quicker to process dates in series after than as a converter
+  datum['datetime'] = pd.to_datetime(datum['datetime'], format="%Y%m%d%H")
   datum['validtime'] =  datum['datetime']  + pd.to_timedelta(datum['tau'], unit="h")
+  datum = datum.loc[ (datum['lat']!=0) | (datum['lon']!=0) ]
   if tech is None:
     return datum
   else:
