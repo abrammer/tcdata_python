@@ -7,4 +7,4 @@
 """
 
     
-__all__ = ['.atcf','.cxml']
+__all__ = ['.atcf','.cxml','.nhc_ftp']
