@@ -29,8 +29,6 @@ def haversine_distance_angle( lat1, lon1, lat2, lon2):
     rlat2 = np.radians( lat2 )
     rlon2 = np.radians( lon2 )
     d = np.arccos( np.sin(rlat1)*np.sin(rlat2) + np.cos(rlat1)*np.cos(rlat2)*np.cos(rlon2-rlon1) ) * R
-#     dy= np.arccos( np.sin(rlat1)*np.sin(rlat2) + np.cos(rlat1)*np.cos(rlat2) ) * R
-#     dx= np.arccos( np.sin(rlat2)*np.sin(rlat2) + np.cos(rlat2)*np.cos(rlat2)*np.cos(rlon2-rlon1) ) * R
     brng = np.degrees( np.arctan2(np.cos(rlat1)*np.sin(rlat2)- \
                       np.sin(rlat1)*np.cos(rlat2)*np.cos(rlon2-rlon1), \
                                 np.sin(rlon2-rlon1)*np.cos(rlat2)) )
