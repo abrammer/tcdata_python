@@ -1,7 +1,6 @@
 """Simple functions to currently aid in reading/writing ATCF format files"""
 #ATCF read / Write Module
 # pylint: disable=W0311, C0326, C0103
-import pandas as pd
 
 def strip(text):
     try:
@@ -100,6 +99,7 @@ def read_storm_names(fname):
 
 def read_adeck(fname, tech=None):
   """Read adeck from filename into pandas dataframe"""
+  import pandas as pd
   ## Tried versions of parsing colums in the read_csv func and they were much slower
   atcfNames = ["basin","number","datetime","tnum","tech","tau","lat","lon","vmax","mslp","type","rad","windcode","rad1",
             "rad2","rad3","rad4","pouter","router","rmw","gusts","eye","subregion"]
