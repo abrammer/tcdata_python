@@ -3,8 +3,8 @@ from TropCy import cxml
 import xml.etree.ElementTree as ET
 import sys
 import os
-from datetime import datetime
-import traceback
+#from datetime import datetime
+#import traceback
 # pylint: disable=W0311, C0326, C0103, C0301
 
 def save_atcf(basin, number, time, data, fid):
