@@ -1,8 +1,10 @@
-from TropCy import atcf
-from TropCy import cxml
 import xml.etree.ElementTree as ET
 import sys
+sys.path.append(sys.path[0]+'/..')
+print(sys.path)
 import os
+from TropCy import atcf
+from TropCy import cxml
 #from datetime import datetime
 #import traceback
 # pylint: disable=W0311, C0326, C0103, C0301
