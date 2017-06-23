@@ -1,7 +1,9 @@
 import numpy as np
-import pandas as pd
 
 def calculate_ellipse(group, min_no=0):
+    ''' Given Pandas group with lat,lon calculate EOF for Major/Minor
+        ellipse axis or eigen values and vectors'''
+    import pandas as pd
     if(len(group) < min_no):
         return
     sigm_locs = group[ ['lat', 'lon'] ].std()**2
@@ -23,6 +25,8 @@ def calculate_ellipse(group, min_no=0):
         return 
 
 def haversine_distance_angle( lat1, lon1, lat2, lon2):
+    'Simple implementation of calculating great circle distance and angle between points
+    using haversine, hopefully numpy allows use of series rather than singular values'''
     R = 6371. # Earths Circumferences  [km]
     rlat1 = np.radians( lat1 )
     rlon1 = np.radians( lon1 )
@@ -36,6 +40,7 @@ def haversine_distance_angle( lat1, lon1, lat2, lon2):
 
 
 def absolute_track_spread(data):
+    ''' calculate distance from mean given group with lat and lon values'''
     d, brng = haversine_distance_angle(  data['lat'],  data['lon'],  data['lat'].mean(), data['lon'].mean()  )
     data['ats_dist'] = d
     data['ats_angl'] = brng
