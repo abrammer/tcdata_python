@@ -25,7 +25,7 @@ def calculate_ellipse(group, min_no=0):
         return 
 
 def haversine_distance_angle( lat1, lon1, lat2, lon2):
-    'Simple implementation of calculating great circle distance and angle between points
+    '''Simple implementation of calculating great circle distance and angle between points
     using haversine, hopefully numpy allows use of series rather than singular values'''
     R = 6371. # Earths Circumferences  [km]
     rlat1 = np.radians( lat1 )
