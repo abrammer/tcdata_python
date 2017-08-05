@@ -1,6 +1,7 @@
 """Simple functions to currently aid in reading/writing ATCF format files"""
 #ATCF read / Write Module
 # pylint: disable=W0311, C0326, C0103
+import pandas as pd
 
 def strip(text):
     try:
@@ -97,9 +98,8 @@ def read_storm_names(fname):
   return datum[ ['name', 'basin', 'number','year', 'type', 'startdate', 'enddate','id'] ]
   
 
-def read_adeck(fname, tech=None):
+def read_adeck(fname, tech=None, date=None):
   """Read adeck from filename into pandas dataframe"""
-  import pandas as pd
   ## Tried versions of parsing colums in the read_csv func and they were much slower
   atcfNames = ["basin","number","datetime","tnum","tech","tau","lat","lon","vmax","mslp","type","rad","windcode","rad1",
             "rad2","rad3","rad4","pouter","router","rmw","gusts","eye","subregion"]
@@ -116,11 +116,11 @@ def read_adeck(fname, tech=None):
   datum['datetime'] = pd.to_datetime(datum['datetime'], format="%Y%m%d%H")
   datum['validtime'] =  datum['datetime']  + pd.to_timedelta(datum['tau'], unit="h")
   datum = datum.loc[ (datum['lat']!=0) | (datum['lon']!=0) ]
-  if tech is None:
-    return datum
-  else:
-    return datum.loc[ datum['tech'].isin(tech) ]
-    
+  if tech is not None:
+    datum = datum.loc[ datum['tech'].isin(tech) ]
+  if date is not None:
+    datum = datum.loc[ datum['datetime']==pd.to_datetime(date) ]
+  return datum  
 
     
 if __name__ == '__main__':
