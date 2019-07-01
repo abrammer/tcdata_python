@@ -84,14 +84,17 @@ class ftp_connect():
         os.chdir(    self.local_cwd() )
     
     def remote_cwd(self):
-        if(self.year == datetime.today().year):
+        try:
+          if(self.year == datetime.today().year):
             type = self.type
             if type == "aid": 
                 type = "aid_public"
             return "/atcf/"+type
-        else:
+          else:
             return "/atcf/"+"archive/{year}".format(year=self.year)
-          
+        except AttributeError:
+          return "/atcf/"+self.type 
+
     def local_cwd(self):
         return self.local_parent+self.type
 

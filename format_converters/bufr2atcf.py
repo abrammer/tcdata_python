@@ -60,39 +60,27 @@ def which_basin(subset):
             basin = which_basin(subset.loc[ subset['lon'].notnull(), 'lon'][0],subset.loc[ subset['lon'].notnull(), 'lat'][0])
             return basin
         else:
-            basin_lats =  [0,0,60,60, 20, 15,12,10,8.3,9.25,0]
-            basin_lons =  [-72,-140,-140,-100,-100, -90,-85,-84,-81.5,-79,-72]
-            basin = [[i, j] for i, j in zip(basin_lats,basin_lons)]
+            basin = [[0, -72], [0, -140], [60, -140], [60, -100], [20, -100], [15, -90], [12, -85], [10, -84], [8.3, -81.5], [9.25, -79], [0, -72]]
             path = mpltPath.Path( basin )
             if( path.contains_points( [[y,x]], radius=0.1 )):
                 return "ep"
-            basin_lats =  [0,0,60,60, 20, 15,12,10,8.3,9.25,0]
-            basin_lons =  [-72,0,0,-100,-100, -90,-85,-84,-81.5,-79,-72]
-            basin = [[i, j] for i, j in zip(basin_lats,basin_lons)]
+            basin = [[0, -72], [0, 0], [60, 0], [60, -100], [20, -100], [15, -90], [12, -85], [10, -84], [8.3, -81.5], [9.25, -79], [0, -72]]
             path = mpltPath.Path( basin )
             if( path.contains_points( [[y,x]], radius=0.1 )):
                 return "al"
-            basin_lats =  [0,60,60,0,0]
-            basin_lons =  [180, 180, 220, 220, 180]
-            basin = [[i, j] for i, j in zip(basin_lats,basin_lons)]
+            basin = [[0, 180], [60, 180], [60, 220], [0, 220], [0, 180]]
             path = mpltPath.Path( basin )
             if( path.contains_points( [[y,x]], radius=0.1 )):
                 return "cp"
-            basin_lats =  [0,60,60,0,0]
-            basin_lons =  [180, 180, 100, 100, 180]
-            basin = [[i, j] for i, j in zip(basin_lats,basin_lons)]
+            basin = [[0, 180], [60, 180], [60, 100], [0, 100], [0, 180]]
             path = mpltPath.Path( basin )
             if( path.contains_points( [[y,x]], radius=0.1 )):
                 return "wp"
-            basin_lats =  [0,60,60,0,0]
-            basin_lons =  [40, 40, 100, 100, 40]
-            basin = [[i, j] for i, j in zip(basin_lats,basin_lons)]
+            basin = [[0, 40], [60, 40], [60, 100], [0, 100], [0, 40]]
             path = mpltPath.Path( basin )
             if( path.contains_points( [[y,x]], radius=0.1 )):
                 return "io"
-            basin_lats =  [0,-60,-60,0,0]
-            basin_lons =  [20, 20, 120, 120, 2]
-            basin = [[i, j] for i, j in zip(basin_lats,basin_lons)]
+            basin = [[0, 20], [-60, 20], [-60, 120], [0, 120], [0, 2]]
             path = mpltPath.Path( basin )
             if( path.contains_points( [[y,x]], radius=0.1 )):
                 return "io"
@@ -149,7 +137,7 @@ if __name__ == '__main__':
     table = libbufr.read_tables(codecs.open(BUFR_TABLES[0], 'rb', 'utf-8'), codecs.open(BUFR_TABLES[1], 'rb', 'utf-8'))
     bufr_fname = '/ct12/abrammer/graphics/ecmf_tc_data/data/A_JSXX01ECEP141200_C_ECMP_20170714120000_tropical_cyclone_track_FERNANDA_-118p3degW_11degN_bufr4.bin'
     bufr_out = 'test.dat' #bufr_fname.replace('.bin', '.dat')
-    bufr_fname = sys.argv[1]
+#     bufr_fname = sys.argv[1]
     print(f"Converting {bufr_fname}")
     msg = bufrpy.decode_file(open(bufr_fname, 'rb'), table)
     alldata = bufr_to_data(msg)
@@ -157,11 +145,13 @@ if __name__ == '__main__':
     with open(bufr_out, 'a') as fout:
         for subset in alldata:
             basin = which_basin(subset)
+            storm_id = int(subset['STORM IDENTIFIER'][0][:2])
+            tech = to_tech(subset)
             for index,datum in subset.iterrows():
                     if( pd.notnull(datum.get_value('lon')) ):
-                        fout.write( atcf.line_out(basin, int(subset['STORM IDENTIFIER'][0][:2]), 
+                        fout.write( atcf.line_out(basin, storm_id, 
                             subset['date'][0], 
-                            to_tech(subset),
+                            tech,
                             datum['tau'], datum['lat'], datum['lon'], datum['vmax']*1.94384, datum['mslp']/100., TY='XX')
                         )
     try:
